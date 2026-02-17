@@ -48,8 +48,10 @@ jobs:
             --s3-prefix pulse-engagement-tracker \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
+            --resolve-s3 false \
             --capabilities CAPABILITY_IAM \
-            --parameter-overrides Environment=dev
+            --parameter-overrides Environment=dev \
+            --region us-east-1
 
       - name: Get stack outputs
         id: get-outputs
