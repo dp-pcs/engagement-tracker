@@ -14,3 +14,6 @@ const GOOGLE_CLIENT_ID = '608961564414-un375udmq72c4qk7fapqfcifchc0p6gl.apps.goo
 
 // Allowed email domains (empty = allow all Google accounts)
 const ALLOWED_DOMAINS = ['trilogy.com', 'devfactory.com', 'crossover.com'];
+
+// Google Chat MCP Server URL
+const GOOGLE_CHAT_MCP_URL = 'https://mcp-server.ti.trilogy.com/5b4a6a39/sse?x-api-key=sk-hive-api01-MGY0NTA2NWItMjQyMC00NjBmLTg2OGEtMmI5OTY1YWQzYWRj-ZWFlMDFjAAA';

@@ -869,6 +869,139 @@ body {
     color: var(--text-muted);
 }
 
+/* Chat Activity Panel */
+.chat-activity {
+    padding: 16px;
+}
+
+.chat-stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.chat-stat {
+    text-align: center;
+}
+
+.chat-stat .stat-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--accent-primary);
+}
+
+.chat-stat .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.chat-section {
+    margin-bottom: 20px;
+}
+
+.chat-section h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.participants-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.participant {
+    background: var(--bg-secondary);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+}
+
+.participant-name {
+    font-weight: 500;
+}
+
+.participant-email {
+    color: var(--text-muted);
+    margin-left: 8px;
+    font-size: 12px;
+}
+
+.messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-message {
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.message-author {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.message-time {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-left: 12px;
+}
+
+.message-text {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.chat-error {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.chat-error-hint {
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.chat-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.chat-link:hover {
+    text-decoration: underline;
+}
+
+.chat-activity-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.chat-activity-container {
+    margin-top: 16px;
+    min-height: 100px;
+}
+
+.chat-activity-container .loading {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
 /* Buttons */
 .btn {
     padding: 8px 16px;

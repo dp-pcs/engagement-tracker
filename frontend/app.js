@@ -578,6 +578,30 @@ async function viewEngagement(id) {
         grid.appendChild(rightCol);
         content.appendChild(grid);
 
+        // Chat Activity Section (if chat space is configured)
+        if (engagement.chatSpace) {
+            const chatSection = createElement('div', { className: 'detail-section chat-activity-section' });
+            chatSection.appendChild(createElement('h3', {}, ['Google Chat Activity']));
+
+            // Link to chat space
+            const chatLink = createElement('a', {
+                className: 'chat-link',
+                href: engagement.chatSpace,
+                target: '_blank'
+            }, ['Open Chat Space →']);
+            chatSection.appendChild(chatLink);
+
+            // Chat activity container
+            const chatContainer = createElement('div', { id: 'engagement-chat-activity' });
+            chatContainer.className = 'chat-activity-container';
+            chatSection.appendChild(chatContainer);
+
+            content.appendChild(chatSection);
+
+            // Load chat activity
+            loadChatActivity(engagement.chatSpace);
+        }
+
         // Actions
         const actions = createElement('div', { className: 'detail-actions' });
 
@@ -1325,6 +1349,48 @@ async function saveQuickAgent(event) {
     } catch (error) {
         console.error('Error creating agent:', error);
         alert(error.message || 'Failed to create agent');
+    }
+}
+
+// Chat Activity
+let chatPanel = null;
+
+async function loadChatActivity(spaceUrl) {
+    const container = document.getElementById('engagement-chat-activity');
+    if (!container) return;
+
+    // Show loading state
+    container.textContent = '';
+    const loading = createElement('div', { className: 'loading' }, ['Connecting to chat...']);
+    container.appendChild(loading);
+
+    // Check if MCP URL is configured
+    if (typeof GOOGLE_CHAT_MCP_URL === 'undefined' || !GOOGLE_CHAT_MCP_URL) {
+        container.textContent = '';
+        const noConfig = createElement('p', { className: 'chat-error' },
+            ['Chat integration not configured']);
+        container.appendChild(noConfig);
+        return;
+    }
+
+    try {
+        // Initialize chat panel if not already done
+        if (!chatPanel) {
+            chatPanel = new ChatActivityPanel('engagement-chat-activity');
+            await chatPanel.initialize(GOOGLE_CHAT_MCP_URL);
+        }
+
+        // Load activity for this space
+        await chatPanel.loadActivity(spaceUrl);
+    } catch (error) {
+        console.error('Error loading chat activity:', error);
+        container.textContent = '';
+
+        const errorDiv = createElement('div', { className: 'chat-error' });
+        errorDiv.appendChild(createElement('p', {}, ['Unable to load chat activity']));
+        errorDiv.appendChild(createElement('p', { className: 'chat-error-hint' },
+            ['The MCP server may not be accessible from the browser']));
+        container.appendChild(errorDiv);
     }
 }
 
