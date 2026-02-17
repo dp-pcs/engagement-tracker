@@ -12,6 +12,7 @@ Globals:
         ENGAGEMENTS_TABLE: !Ref EngagementsTable
         TESTIMONIALS_TABLE: !Ref TestimonialsTable
         SOLICITATIONS_TABLE: !Ref SolicitationsTable
+        AGENTS_TABLE: !Ref AgentsTable
         CORS_ORIGIN: !If [IsProd, !Sub 'https://${WebsiteBucket}.s3.amazonaws.com', '*']
 
 Parameters:
@@ -90,6 +91,18 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: expiresAt
         Enabled: true
+
+  AgentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'engagement-tracker-agents-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
 
   # API Gateway
   ApiGateway:
@@ -223,6 +236,49 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /solicitations
             Method: POST
+
+  AgentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'engagement-tracker-agents-${Environment}'
+      CodeUri: functions/
+      Handler: agents.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AgentsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref EngagementsTable
+      Events:
+        GetAll:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agents
+            Method: GET
+        GetOne:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agents/{id}
+            Method: GET
+        Create:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agents
+            Method: POST
+        Update:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agents/{id}
+            Method: PUT
+        Delete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agents/{id}
+            Method: DELETE
 
   # S3 Bucket for Frontend
   WebsiteBucket:

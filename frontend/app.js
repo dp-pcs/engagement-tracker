@@ -2,6 +2,7 @@
 let engagements = [];
 let testimonials = [];
 let solicitations = [];
+let agents = [];
 let currentFilter = 'all';
 
 // Initialize
@@ -34,6 +35,9 @@ function setupNavigation() {
                     break;
                 case 'engagements':
                     loadEngagements();
+                    break;
+                case 'agents':
+                    loadAgents();
                     break;
                 case 'testimonials':
                     loadTestimonials();
@@ -239,10 +243,13 @@ function renderEngagements() {
     });
 }
 
-function showEngagementModal(engagement = null) {
+async function showEngagementModal(engagement = null) {
     const modal = document.getElementById('engagement-modal');
     const form = document.getElementById('engagement-form');
     const title = document.getElementById('engagement-modal-title');
+
+    // Load agents for dropdown
+    await loadAgentsForDropdown();
 
     if (engagement) {
         title.textContent = 'Edit Engagement';
@@ -254,11 +261,17 @@ function showEngagementModal(engagement = null) {
         document.getElementById('engagement-status').value = engagement.status || 'discovery';
         document.getElementById('engagement-objectives').value = engagement.objectives || '';
         document.getElementById('engagement-tools').value = (engagement.tools || []).join(', ');
-        document.getElementById('engagement-agents').value = (engagement.agents || []).join(', ');
         document.getElementById('engagement-start-date').value = engagement.startDate || '';
         document.getElementById('engagement-target-date').value = engagement.targetDate || '';
         document.getElementById('engagement-blockers').value = engagement.blockers || '';
         document.getElementById('engagement-next-steps').value = engagement.nextSteps || '';
+
+        // Set selected agents in multi-select
+        const agentSelect = document.getElementById('engagement-agents');
+        const engagementAgents = engagement.agents || [];
+        Array.from(agentSelect.options).forEach(option => {
+            option.selected = engagementAgents.includes(option.value);
+        });
     } else {
         title.textContent = 'New Engagement';
         form.reset();
@@ -266,6 +279,24 @@ function showEngagementModal(engagement = null) {
     }
 
     modal.classList.add('active');
+}
+
+async function loadAgentsForDropdown() {
+    try {
+        const response = await fetch(`${API_URL}/agents`);
+        const data = await response.json();
+        agents = data.agents || [];
+
+        const select = document.getElementById('engagement-agents');
+        select.textContent = '';
+
+        agents.forEach(a => {
+            const option = createElement('option', { value: a.name }, [a.name]);
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading agents:', error);
+    }
 }
 
 // Store engagement data for editing
@@ -283,7 +314,7 @@ async function saveEngagement(event) {
         status: document.getElementById('engagement-status').value,
         objectives: document.getElementById('engagement-objectives').value,
         tools: document.getElementById('engagement-tools').value.split(',').map(s => s.trim()).filter(Boolean),
-        agents: document.getElementById('engagement-agents').value.split(',').map(s => s.trim()).filter(Boolean),
+        agents: Array.from(document.getElementById('engagement-agents').selectedOptions).map(o => o.value),
         startDate: document.getElementById('engagement-start-date').value,
         targetDate: document.getElementById('engagement-target-date').value,
         blockers: document.getElementById('engagement-blockers').value,
@@ -685,6 +716,252 @@ function renderRating(rating) {
     return Array(5).fill(0)
         .map((_, i) => `<span class="star ${i < numRating ? 'filled' : ''}">★</span>`)
         .join('');
+}
+
+// Agents
+async function loadAgents() {
+    try {
+        const response = await fetch(`${API_URL}/agents?includeEngagements=true`);
+        const data = await response.json();
+        agents = data.agents || [];
+        renderAgents();
+    } catch (error) {
+        console.error('Error loading agents:', error);
+    }
+}
+
+function renderAgents() {
+    const container = document.getElementById('agents-list');
+    container.textContent = '';
+
+    if (agents.length === 0) {
+        container.textContent = 'No agents defined yet. Add agents to track which are used in your engagements.';
+        return;
+    }
+
+    agents.forEach(a => {
+        const card = createElement('div', { className: 'agent-card', onclick: () => viewAgent(a.id) });
+
+        // Status badge
+        const statusClass = a.status === 'active' ? 'status-active' :
+                           a.status === 'inactive' ? 'status-paused' : 'status-closed-failed';
+        card.appendChild(createElement('span', { className: `status-badge ${statusClass}` },
+            [a.status.charAt(0).toUpperCase() + a.status.slice(1)]));
+
+        // Name
+        card.appendChild(createElement('h3', { className: 'agent-name' }, [a.name || '']));
+
+        // Description
+        if (a.description) {
+            card.appendChild(createElement('p', { className: 'agent-description' }, [a.description]));
+        }
+
+        // Platform and type badges
+        const meta = createElement('div', { className: 'agent-meta' });
+        meta.appendChild(createElement('span', { className: 'agent-badge' }, [a.platform || 'braintrust']));
+        meta.appendChild(createElement('span', { className: 'agent-badge' }, [a.type || 'assistant']));
+        card.appendChild(meta);
+
+        // Engagement count
+        const engCount = (a.engagements || []).length;
+        const engText = engCount === 0 ? 'No engagements' :
+                       engCount === 1 ? '1 engagement' : `${engCount} engagements`;
+        card.appendChild(createElement('div', { className: 'agent-engagements' }, [engText]));
+
+        container.appendChild(card);
+    });
+}
+
+async function viewAgent(id) {
+    try {
+        const response = await fetch(`${API_URL}/agents/${id}`);
+        const agent = await response.json();
+
+        document.getElementById('view-agent-title').textContent = agent.name || '';
+
+        const content = document.getElementById('view-agent-content');
+        content.textContent = '';
+
+        // Agent details
+        const details = createElement('div', { className: 'agent-detail-section' });
+
+        if (agent.description) {
+            const descP = createElement('p', { className: 'agent-detail-description' }, [agent.description]);
+            details.appendChild(descP);
+        }
+
+        const metaGrid = createElement('div', { className: 'detail-grid' });
+
+        // Type
+        const typeDiv = createElement('div', { className: 'detail-item' });
+        typeDiv.appendChild(createElement('label', {}, ['Type']));
+        typeDiv.appendChild(createElement('span', {}, [agent.type || 'assistant']));
+        metaGrid.appendChild(typeDiv);
+
+        // Platform
+        const platformDiv = createElement('div', { className: 'detail-item' });
+        platformDiv.appendChild(createElement('label', {}, ['Platform']));
+        platformDiv.appendChild(createElement('span', {}, [agent.platform || 'braintrust']));
+        metaGrid.appendChild(platformDiv);
+
+        // Status
+        const statusDiv = createElement('div', { className: 'detail-item' });
+        statusDiv.appendChild(createElement('label', {}, ['Status']));
+        statusDiv.appendChild(createElement('span', {}, [agent.status || 'active']));
+        metaGrid.appendChild(statusDiv);
+
+        details.appendChild(metaGrid);
+        content.appendChild(details);
+
+        // Engagements using this agent
+        const engSection = createElement('div', { className: 'agent-engagements-section' });
+        engSection.appendChild(createElement('h3', {}, ['Engagements Using This Agent']));
+
+        const engagementsList = agent.engagements || [];
+        if (engagementsList.length === 0) {
+            engSection.appendChild(createElement('p', { className: 'no-data' }, ['No engagements are currently using this agent.']));
+        } else {
+            const engList = createElement('div', { className: 'engagement-list' });
+            engagementsList.forEach(eng => {
+                const engCard = createElement('div', { className: 'mini-engagement-card', onclick: () => {
+                    closeModal('view-agent-modal');
+                    viewEngagement(eng.id);
+                }});
+
+                const engHeader = createElement('div', { className: 'mini-eng-header' });
+                engHeader.appendChild(createElement('span', { className: 'mini-eng-name' }, [eng.name]));
+
+                const statusClass = `status-${eng.status}`;
+                engHeader.appendChild(createElement('span', { className: `status-badge ${statusClass}` }, [formatStatus(eng.status)]));
+                engCard.appendChild(engHeader);
+
+                if (eng.team) {
+                    engCard.appendChild(createElement('div', { className: 'mini-eng-team' }, [eng.team]));
+                }
+
+                engList.appendChild(engCard);
+            });
+            engSection.appendChild(engList);
+        }
+        content.appendChild(engSection);
+
+        // Actions
+        const actions = createElement('div', { className: 'detail-actions' });
+
+        const editBtn = createElement('button', { className: 'btn btn-primary' }, ['Edit']);
+        editBtn.onclick = () => {
+            closeModal('view-agent-modal');
+            showAgentModal(agent);
+        };
+        actions.appendChild(editBtn);
+
+        const closeBtn = createElement('button', { className: 'btn btn-secondary' }, ['Close']);
+        closeBtn.onclick = () => closeModal('view-agent-modal');
+        actions.appendChild(closeBtn);
+
+        content.appendChild(actions);
+
+        document.getElementById('view-agent-modal').classList.add('active');
+    } catch (error) {
+        console.error('Error loading agent:', error);
+    }
+}
+
+function showAgentModal(agent = null) {
+    const modal = document.getElementById('agent-modal');
+    const form = document.getElementById('agent-form');
+    const title = document.getElementById('agent-modal-title');
+
+    if (agent) {
+        title.textContent = 'Edit Agent';
+        document.getElementById('agent-id').value = agent.id;
+        document.getElementById('agent-name').value = agent.name || '';
+        document.getElementById('agent-description').value = agent.description || '';
+        document.getElementById('agent-type').value = agent.type || 'assistant';
+        document.getElementById('agent-platform').value = agent.platform || 'braintrust';
+        document.getElementById('agent-status').value = agent.status || 'active';
+    } else {
+        title.textContent = 'New Agent';
+        form.reset();
+        document.getElementById('agent-id').value = '';
+    }
+
+    modal.classList.add('active');
+}
+
+async function saveAgent(event) {
+    event.preventDefault();
+
+    const id = document.getElementById('agent-id').value;
+    const data = {
+        name: document.getElementById('agent-name').value,
+        description: document.getElementById('agent-description').value,
+        type: document.getElementById('agent-type').value,
+        platform: document.getElementById('agent-platform').value,
+        status: document.getElementById('agent-status').value
+    };
+
+    try {
+        const url = id ? `${API_URL}/agents/${id}` : `${API_URL}/agents`;
+        const method = id ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Failed to save agent');
+        }
+
+        closeModal('agent-modal');
+        loadAgents();
+    } catch (error) {
+        console.error('Error saving agent:', error);
+        alert(error.message || 'Failed to save agent');
+    }
+}
+
+function showQuickAgentModal() {
+    document.getElementById('quick-agent-form').reset();
+    document.getElementById('quick-agent-modal').classList.add('active');
+}
+
+async function saveQuickAgent(event) {
+    event.preventDefault();
+
+    const data = {
+        name: document.getElementById('quick-agent-name').value,
+        description: document.getElementById('quick-agent-description').value
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/agents`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Failed to create agent');
+        }
+
+        closeModal('quick-agent-modal');
+        // Refresh the agents dropdown
+        await loadAgentsForDropdown();
+
+        // Select the newly created agent
+        const agentSelect = document.getElementById('engagement-agents');
+        const newOption = Array.from(agentSelect.options).find(o => o.value === data.name);
+        if (newOption) newOption.selected = true;
+
+    } catch (error) {
+        console.error('Error creating agent:', error);
+        alert(error.message || 'Failed to create agent');
+    }
 }
 
 // Close modals on outside click

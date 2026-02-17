@@ -442,6 +442,171 @@ body {
 .solicitation-status.completed { background: var(--success-light); color: var(--success); }
 .solicitation-status.expired { background: var(--error-light); color: var(--error); }
 
+/* Agents Grid */
+.agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.agent-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+}
+
+.agent-card:hover {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.agent-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 8px 0;
+}
+
+.agent-description {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.agent-meta {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.agent-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+.agent-engagements {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Agent Detail View */
+.agent-detail-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.agent-detail-description {
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.detail-item label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.detail-item span {
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.agent-engagements-section {
+    padding: 20px;
+}
+
+.agent-engagements-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.engagement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mini-engagement-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mini-engagement-card:hover {
+    border-color: var(--accent-primary);
+    background: var(--accent-light);
+}
+
+.mini-eng-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mini-eng-name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.mini-eng-team {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.no-data {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Agent select in engagement form */
+.agent-select-container {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.agent-select-container select {
+    flex: 1;
+    min-height: 80px;
+}
+
+.form-hint {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Small modal */
+.modal-small {
+    max-width: 400px;
+}
+
 /* Buttons */
 .btn {
     padding: 8px 16px;

@@ -17,6 +17,7 @@
                 <li><a href="#" data-view="dashboard" class="active">Dashboard</a></li>
                 <li><a href="#" data-view="status-report">Status Report</a></li>
                 <li><a href="#" data-view="engagements">Engagements</a></li>
+                <li><a href="#" data-view="agents">Agents</a></li>
                 <li><a href="#" data-view="testimonials">Testimonials</a></li>
                 <li><a href="#" data-view="solicitations">Solicitations</a></li>
             </ul>
@@ -160,6 +161,26 @@
                 <div id="engagements-list" class="engagements-grid"></div>
             </div>
 
+            <!-- Agents View -->
+            <div id="agents-view" class="view">
+                <header class="view-header">
+                    <h1>Agents</h1>
+                    <button class="btn btn-primary" onclick="showAgentModal()">+ New Agent</button>
+                </header>
+                <div id="agents-list" class="agents-grid"></div>
+            </div>
+
+            <!-- View Agent Modal -->
+            <div id="view-agent-modal" class="modal">
+                <div class="modal-content modal-large">
+                    <div class="modal-header">
+                        <h2 id="view-agent-title">Agent Details</h2>
+                        <button class="close-btn" onclick="closeModal('view-agent-modal')">&times;</button>
+                    </div>
+                    <div id="view-agent-content"></div>
+                </div>
+            </div>
+
             <!-- Testimonials View -->
             <div id="testimonials-view" class="view">
                 <header class="view-header">
@@ -225,8 +246,13 @@
                     <input type="text" id="engagement-tools" placeholder="e.g., notion, slack, drive">
                 </div>
                 <div class="form-group">
-                    <label for="engagement-agents">Agents (comma-separated)</label>
-                    <input type="text" id="engagement-agents" placeholder="e.g., Sales Assistant, Contract Bot">
+                    <label for="engagement-agents">Agents</label>
+                    <div class="agent-select-container">
+                        <select id="engagement-agents" multiple>
+                        </select>
+                        <button type="button" class="btn btn-small btn-secondary" onclick="showQuickAgentModal()">+ Add New</button>
+                    </div>
+                    <small class="form-hint">Hold Ctrl/Cmd to select multiple</small>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -314,6 +340,81 @@
                 <button class="close-btn" onclick="closeModal('view-engagement-modal')">&times;</button>
             </div>
             <div id="view-engagement-content"></div>
+        </div>
+    </div>
+
+    <!-- Agent Modal -->
+    <div id="agent-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="agent-modal-title">New Agent</h2>
+                <button class="close-btn" onclick="closeModal('agent-modal')">&times;</button>
+            </div>
+            <form id="agent-form" onsubmit="saveAgent(event)">
+                <input type="hidden" id="agent-id">
+                <div class="form-group">
+                    <label for="agent-name">Name *</label>
+                    <input type="text" id="agent-name" required placeholder="e.g., Prospector, Redline">
+                </div>
+                <div class="form-group">
+                    <label for="agent-description">Description</label>
+                    <textarea id="agent-description" rows="3" placeholder="What does this agent do?"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="agent-type">Type</label>
+                        <select id="agent-type">
+                            <option value="assistant">Assistant</option>
+                            <option value="workflow">Workflow</option>
+                            <option value="tool">Tool</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="agent-platform">Platform</label>
+                        <select id="agent-platform">
+                            <option value="braintrust">Braintrust</option>
+                            <option value="custom">Custom</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="agent-status">Status</label>
+                    <select id="agent-status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="deprecated">Deprecated</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('agent-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Agent Modal (for adding from engagement form) -->
+    <div id="quick-agent-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Add New Agent</h2>
+                <button class="close-btn" onclick="closeModal('quick-agent-modal')">&times;</button>
+            </div>
+            <form id="quick-agent-form" onsubmit="saveQuickAgent(event)">
+                <div class="form-group">
+                    <label for="quick-agent-name">Agent Name *</label>
+                    <input type="text" id="quick-agent-name" required placeholder="e.g., Prospector">
+                </div>
+                <div class="form-group">
+                    <label for="quick-agent-description">Description</label>
+                    <textarea id="quick-agent-description" rows="2"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('quick-agent-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Agent</button>
+                </div>
+            </form>
         </div>
     </div>
 
