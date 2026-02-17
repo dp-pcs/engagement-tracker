@@ -44,6 +44,8 @@ jobs:
         run: |
           sam deploy \
             --stack-name pulse-engagement-tracker \
+            --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-l56ap6crdyy9 \
+            --s3-prefix pulse-engagement-tracker \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --capabilities CAPABILITY_IAM \
