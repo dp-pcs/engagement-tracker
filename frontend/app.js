@@ -21,21 +21,50 @@ function initAuth() {
         try {
             currentUser = JSON.parse(savedUser);
             showApp();
+            return;
         } catch (e) {
             localStorage.removeItem('pulse_user');
-            showLogin();
         }
-    } else {
-        showLogin();
     }
 
-    // Initialize Google Sign-In button with client ID
-    if (GOOGLE_CLIENT_ID) {
-        const gIdOnload = document.getElementById('g_id_onload');
-        if (gIdOnload) {
-            gIdOnload.setAttribute('data-client_id', GOOGLE_CLIENT_ID);
-        }
+    showLogin();
+    initGoogleSignIn();
+}
+
+function initGoogleSignIn() {
+    // Wait for Google library to load
+    if (typeof google === 'undefined' || !google.accounts) {
+        setTimeout(initGoogleSignIn, 100);
+        return;
     }
+
+    if (!GOOGLE_CLIENT_ID) {
+        console.error('GOOGLE_CLIENT_ID not configured');
+        document.getElementById('google-signin-button').innerHTML =
+            '<p style="color: red;">Google Sign-In not configured</p>';
+        return;
+    }
+
+    // Initialize Google Identity Services
+    google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleSignIn,
+        auto_select: false,
+        cancel_on_tap_outside: true
+    });
+
+    // Render the button
+    google.accounts.id.renderButton(
+        document.getElementById('google-signin-button'),
+        {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: 'signin_with',
+            shape: 'rectangular',
+            logo_alignment: 'left'
+        }
+    );
 }
 
 function handleGoogleSignIn(response) {
