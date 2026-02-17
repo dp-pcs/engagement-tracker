@@ -17,6 +17,7 @@
                 <li><a href="#" data-view="dashboard" class="active">Dashboard</a></li>
                 <li><a href="#" data-view="status-report">Status Report</a></li>
                 <li><a href="#" data-view="engagements">Engagements</a></li>
+                <li><a href="#" data-view="tasks">Tasks</a></li>
                 <li><a href="#" data-view="agents">Agents</a></li>
                 <li><a href="#" data-view="testimonials">Testimonials</a></li>
                 <li><a href="#" data-view="solicitations">Solicitations</a></li>
@@ -159,6 +160,23 @@
                     <button class="filter-btn" data-status="closed-failed">Failed</button>
                 </div>
                 <div id="engagements-list" class="engagements-grid"></div>
+            </div>
+
+            <!-- Tasks View -->
+            <div id="tasks-view" class="view">
+                <header class="view-header">
+                    <h1>Tasks</h1>
+                    <button class="btn btn-primary" onclick="showTaskModal()">+ New Task</button>
+                </header>
+                <div class="tasks-summary" id="tasks-summary"></div>
+                <div class="tasks-filters">
+                    <button class="filter-btn active" data-task-status="all">All</button>
+                    <button class="filter-btn" data-task-status="pending">Pending</button>
+                    <button class="filter-btn" data-task-status="in-progress">In Progress</button>
+                    <button class="filter-btn" data-task-status="completed">Completed</button>
+                    <button class="filter-btn" data-task-status="blocked">Blocked</button>
+                </div>
+                <div id="tasks-list" class="tasks-grid"></div>
             </div>
 
             <!-- Agents View -->
@@ -340,6 +358,66 @@
                 <button class="close-btn" onclick="closeModal('view-engagement-modal')">&times;</button>
             </div>
             <div id="view-engagement-content"></div>
+        </div>
+    </div>
+
+    <!-- Task Modal -->
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="task-modal-title">New Task</h2>
+                <button class="close-btn" onclick="closeModal('task-modal')">&times;</button>
+            </div>
+            <form id="task-form" onsubmit="saveTask(event)">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label for="task-engagement">Engagement *</label>
+                    <select id="task-engagement" required>
+                        <option value="">Select an engagement...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-title">Task Title *</label>
+                    <input type="text" id="task-title" required placeholder="e.g., Complete Notion MCP integration">
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Description</label>
+                    <textarea id="task-description" rows="2" placeholder="Additional details about this task"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="task-status">Status</label>
+                        <select id="task-status">
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="blocked">Blocked</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-priority">Priority</label>
+                        <select id="task-priority">
+                            <option value="high">High</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="task-assignee">Assignee</label>
+                        <input type="text" id="task-assignee" placeholder="Who is responsible?">
+                    </div>
+                    <div class="form-group">
+                        <label for="task-due-date">Due Date</label>
+                        <input type="date" id="task-due-date">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('task-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 

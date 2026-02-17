@@ -3,7 +3,9 @@ let engagements = [];
 let testimonials = [];
 let solicitations = [];
 let agents = [];
+let tasks = [];
 let currentFilter = 'all';
+let currentTaskFilter = 'all';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,6 +38,9 @@ function setupNavigation() {
                 case 'engagements':
                     loadEngagements();
                     break;
+                case 'tasks':
+                    loadTasks();
+                    break;
                 case 'agents':
                     loadAgents();
                     break;
@@ -49,13 +54,23 @@ function setupNavigation() {
         });
     });
 
-    // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    // Engagement filter buttons
+    document.querySelectorAll('.filters .filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.filters .filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = btn.dataset.status;
             renderEngagements();
+        });
+    });
+
+    // Task filter buttons
+    document.querySelectorAll('.tasks-filters .filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tasks-filters .filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTaskFilter = btn.dataset.taskStatus;
+            renderTasks();
         });
     });
 }
@@ -716,6 +731,241 @@ function renderRating(rating) {
     return Array(5).fill(0)
         .map((_, i) => `<span class="star ${i < numRating ? 'filled' : ''}">★</span>`)
         .join('');
+}
+
+// Tasks
+async function loadTasks() {
+    try {
+        const [taskRes, engRes] = await Promise.all([
+            fetch(`${API_URL}/tasks`),
+            fetch(`${API_URL}/engagements`)
+        ]);
+
+        const taskData = await taskRes.json();
+        const engData = await engRes.json();
+
+        tasks = taskData.tasks || [];
+        engagements = engData.engagements || [];
+
+        renderTasksSummary(taskData.summary);
+        renderTasks();
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+    }
+}
+
+function renderTasksSummary(summary) {
+    const container = document.getElementById('tasks-summary');
+    container.textContent = '';
+
+    if (!summary) return;
+
+    const summaryEl = createElement('div', { className: 'summary-bar' });
+
+    // Progress bar
+    const progressContainer = createElement('div', { className: 'progress-container' });
+    const progressText = createElement('span', { className: 'progress-text' },
+        [`${summary.completed} of ${summary.total} tasks completed (${summary.percentComplete}%)`]);
+    progressContainer.appendChild(progressText);
+
+    const progressBar = createElement('div', { className: 'progress-bar' });
+    const progressFill = createElement('div', { className: 'progress-fill' });
+    progressFill.style.width = `${summary.percentComplete}%`;
+    progressBar.appendChild(progressFill);
+    progressContainer.appendChild(progressBar);
+
+    summaryEl.appendChild(progressContainer);
+
+    // Stats
+    const stats = createElement('div', { className: 'task-stats' });
+    stats.appendChild(createElement('span', { className: 'stat-item pending' }, [`${summary.pending} pending`]));
+    stats.appendChild(createElement('span', { className: 'stat-item in-progress' }, [`${summary.inProgress} in progress`]));
+    stats.appendChild(createElement('span', { className: 'stat-item completed' }, [`${summary.completed} completed`]));
+    summaryEl.appendChild(stats);
+
+    container.appendChild(summaryEl);
+}
+
+function renderTasks() {
+    const container = document.getElementById('tasks-list');
+    container.textContent = '';
+
+    const filtered = currentTaskFilter === 'all'
+        ? tasks
+        : tasks.filter(t => t.status === currentTaskFilter);
+
+    if (filtered.length === 0) {
+        container.textContent = currentTaskFilter === 'all'
+            ? 'No tasks yet. Create tasks to track progress on your engagements.'
+            : `No ${currentTaskFilter} tasks.`;
+        return;
+    }
+
+    // Group by engagement
+    const grouped = {};
+    filtered.forEach(t => {
+        const engName = t.engagementName || 'Unknown';
+        if (!grouped[engName]) grouped[engName] = [];
+        grouped[engName].push(t);
+    });
+
+    Object.entries(grouped).forEach(([engName, engTasks]) => {
+        const section = createElement('div', { className: 'task-section' });
+
+        const header = createElement('div', { className: 'task-section-header' });
+        header.appendChild(createElement('h3', {}, [engName]));
+
+        const completed = engTasks.filter(t => t.status === 'completed').length;
+        header.appendChild(createElement('span', { className: 'task-count' },
+            [`${completed}/${engTasks.length}`]));
+        section.appendChild(header);
+
+        const taskList = createElement('div', { className: 'task-list' });
+        engTasks.forEach(t => {
+            const taskItem = createElement('div', { className: `task-item priority-${t.priority}` });
+
+            // Checkbox
+            const checkbox = createElement('input', { type: 'checkbox', className: 'task-checkbox' });
+            checkbox.checked = t.status === 'completed';
+            checkbox.onchange = () => toggleTaskStatus(t.id, checkbox.checked);
+            taskItem.appendChild(checkbox);
+
+            // Task content
+            const content = createElement('div', { className: 'task-content' });
+
+            const titleRow = createElement('div', { className: 'task-title-row' });
+            const title = createElement('span', {
+                className: `task-title ${t.status === 'completed' ? 'completed' : ''}`
+            }, [t.title]);
+            titleRow.appendChild(title);
+
+            // Priority badge
+            titleRow.appendChild(createElement('span',
+                { className: `priority-badge priority-${t.priority}` },
+                [t.priority]));
+
+            // Status badge if not pending or completed
+            if (t.status === 'in-progress') {
+                titleRow.appendChild(createElement('span', { className: 'status-badge status-active' }, ['In Progress']));
+            } else if (t.status === 'blocked') {
+                titleRow.appendChild(createElement('span', { className: 'status-badge status-closed-failed' }, ['Blocked']));
+            }
+
+            content.appendChild(titleRow);
+
+            // Meta info
+            const meta = createElement('div', { className: 'task-meta' });
+            if (t.assignee) meta.appendChild(createElement('span', {}, [t.assignee]));
+            if (t.dueDate) meta.appendChild(createElement('span', {}, [`Due: ${formatDate(t.dueDate)}`]));
+            content.appendChild(meta);
+
+            taskItem.appendChild(content);
+
+            // Edit button
+            const editBtn = createElement('button', { className: 'btn btn-small btn-secondary' }, ['Edit']);
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                showTaskModal(t);
+            };
+            taskItem.appendChild(editBtn);
+
+            taskList.appendChild(taskItem);
+        });
+
+        section.appendChild(taskList);
+        container.appendChild(section);
+    });
+}
+
+async function toggleTaskStatus(taskId, completed) {
+    try {
+        await fetch(`${API_URL}/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: completed ? 'completed' : 'pending' })
+        });
+        loadTasks();
+    } catch (error) {
+        console.error('Error updating task:', error);
+    }
+}
+
+async function showTaskModal(task = null) {
+    const modal = document.getElementById('task-modal');
+    const form = document.getElementById('task-form');
+    const title = document.getElementById('task-modal-title');
+
+    // Load engagements for dropdown
+    try {
+        const response = await fetch(`${API_URL}/engagements`);
+        const data = await response.json();
+        engagements = data.engagements || [];
+
+        const select = document.getElementById('task-engagement');
+        select.textContent = '';
+        select.appendChild(createElement('option', { value: '' }, ['Select an engagement...']));
+
+        engagements
+            .filter(e => !e.status.startsWith('closed'))
+            .forEach(e => {
+                const option = createElement('option', { value: e.id }, [e.name || '']);
+                select.appendChild(option);
+            });
+    } catch (error) {
+        console.error('Error loading engagements:', error);
+    }
+
+    if (task) {
+        title.textContent = 'Edit Task';
+        document.getElementById('task-id').value = task.id;
+        document.getElementById('task-engagement').value = task.engagementId || '';
+        document.getElementById('task-title').value = task.title || '';
+        document.getElementById('task-description').value = task.description || '';
+        document.getElementById('task-status').value = task.status || 'pending';
+        document.getElementById('task-priority').value = task.priority || 'medium';
+        document.getElementById('task-assignee').value = task.assignee || '';
+        document.getElementById('task-due-date').value = task.dueDate || '';
+    } else {
+        title.textContent = 'New Task';
+        form.reset();
+        document.getElementById('task-id').value = '';
+    }
+
+    modal.classList.add('active');
+}
+
+async function saveTask(event) {
+    event.preventDefault();
+
+    const id = document.getElementById('task-id').value;
+    const data = {
+        engagementId: document.getElementById('task-engagement').value,
+        title: document.getElementById('task-title').value,
+        description: document.getElementById('task-description').value,
+        status: document.getElementById('task-status').value,
+        priority: document.getElementById('task-priority').value,
+        assignee: document.getElementById('task-assignee').value,
+        dueDate: document.getElementById('task-due-date').value
+    };
+
+    try {
+        const url = id ? `${API_URL}/tasks/${id}` : `${API_URL}/tasks`;
+        const method = id ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) throw new Error('Failed to save task');
+
+        closeModal('task-modal');
+        loadTasks();
+    } catch (error) {
+        console.error('Error saving task:', error);
+        alert('Failed to save task');
+    }
 }
 
 // Agents
