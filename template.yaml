@@ -14,6 +14,7 @@ Globals:
         SOLICITATIONS_TABLE: !Ref SolicitationsTable
         AGENTS_TABLE: !Ref AgentsTable
         TASKS_TABLE: !Ref TasksTable
+        CHAT_SUMMARIES_TABLE: !Ref ChatSummariesTable
         CORS_ORIGIN: !If [IsProd, !Sub 'https://${WebsiteBucket}.s3.amazonaws.com', '*']
 
 Parameters:
@@ -125,6 +126,21 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
+
+  ChatSummariesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'engagement-tracker-chat-summaries-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: engagementId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: engagementId
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
 
   # API Gateway
   ApiGateway:
@@ -350,6 +366,33 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /tasks/{id}
             Method: DELETE
+
+  ChatSummaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'engagement-tracker-chat-summary-${Environment}'
+      CodeUri: functions/
+      Handler: chat_summary.handler
+      Timeout: 120
+      MemorySize: 512
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSummariesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref EngagementsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource:
+                - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pulse-engagement-tracker/*'
+      Events:
+        GetSummary:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /chat-summary/{engagementId}
+            Method: GET
 
   # S3 Bucket for Frontend
   WebsiteBucket:

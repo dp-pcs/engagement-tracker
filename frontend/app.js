@@ -598,8 +598,8 @@ async function viewEngagement(id) {
 
             content.appendChild(chatSection);
 
-            // Load chat activity
-            loadChatActivity(engagement.chatSpace);
+            // Load chat summary from backend API
+            loadChatSummary(engagement.id);
         }
 
         // Actions
@@ -1352,46 +1352,136 @@ async function saveQuickAgent(event) {
     }
 }
 
-// Chat Activity
-let chatPanel = null;
-
-async function loadChatActivity(spaceUrl) {
+// Chat Activity - using backend summarization API
+async function loadChatSummary(engagementId, refresh = false) {
     const container = document.getElementById('engagement-chat-activity');
     if (!container) return;
 
     // Show loading state
     container.textContent = '';
-    const loading = createElement('div', { className: 'loading' }, ['Connecting to chat...']);
+    const loading = createElement('div', { className: 'chat-loading' });
+    loading.appendChild(createElement('div', { className: 'loading-spinner' }));
+    loading.appendChild(createElement('span', {}, [refresh ? 'Generating fresh summary...' : 'Loading chat summary...']));
     container.appendChild(loading);
 
-    // Check if MCP URL is configured
-    if (typeof GOOGLE_CHAT_MCP_URL === 'undefined' || !GOOGLE_CHAT_MCP_URL) {
-        container.textContent = '';
-        const noConfig = createElement('p', { className: 'chat-error' },
-            ['Chat integration not configured']);
-        container.appendChild(noConfig);
-        return;
-    }
-
     try {
-        // Initialize chat panel if not already done
-        if (!chatPanel) {
-            chatPanel = new ChatActivityPanel('engagement-chat-activity');
-            await chatPanel.initialize(GOOGLE_CHAT_MCP_URL);
+        const url = `${API_URL}/chat-summary/${engagementId}${refresh ? '?refresh=true' : ''}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        container.textContent = '';
+
+        if (!data.hasChatSpace) {
+            container.appendChild(createElement('p', { className: 'chat-no-data' },
+                ['No chat space configured for this engagement.']));
+            return;
         }
 
-        // Load activity for this space
-        await chatPanel.loadActivity(spaceUrl);
+        if (!data.summary) {
+            container.appendChild(createElement('p', { className: 'chat-no-data' },
+                [data.message || 'No chat summary available.']));
+            return;
+        }
+
+        const summary = data.summary;
+
+        // Summary header with refresh button
+        const header = createElement('div', { className: 'chat-summary-header' });
+        const title = createElement('h4', {}, ['Chat Summary']);
+
+        const refreshBtn = createElement('button', { className: 'btn btn-small btn-secondary refresh-btn' });
+        refreshBtn.textContent = '↻ Refresh';
+        refreshBtn.onclick = (e) => {
+            e.preventDefault();
+            loadChatSummary(engagementId, true);
+        };
+        header.appendChild(title);
+        header.appendChild(refreshBtn);
+        container.appendChild(header);
+
+        // Cache info
+        if (data.cachedAt) {
+            const cacheInfo = createElement('div', { className: 'chat-cache-info' });
+            const cacheDate = new Date(data.cachedAt);
+            const fromCacheText = data.fromCache ? ' (cached)' : ' (fresh)';
+            cacheInfo.textContent = `Updated: ${cacheDate.toLocaleString()}${fromCacheText}`;
+            container.appendChild(cacheInfo);
+        }
+
+        // Main summary
+        if (summary.summary) {
+            const summarySection = createElement('div', { className: 'chat-summary-section' });
+            summarySection.appendChild(createElement('p', { className: 'chat-summary-text' }, [summary.summary]));
+            container.appendChild(summarySection);
+        }
+
+        // Sentiment badge
+        if (summary.sentiment && summary.sentiment !== 'neutral') {
+            const sentimentBadge = createElement('span', {
+                className: `sentiment-badge sentiment-${summary.sentiment}`
+            }, [summary.sentiment.charAt(0).toUpperCase() + summary.sentiment.slice(1)]);
+            container.appendChild(sentimentBadge);
+        }
+
+        // Topics
+        if (summary.topics && summary.topics.length > 0) {
+            const topicsSection = createElement('div', { className: 'chat-topics' });
+            topicsSection.appendChild(createElement('strong', {}, ['Topics: ']));
+            summary.topics.forEach((topic, i) => {
+                topicsSection.appendChild(createElement('span', { className: 'topic-tag' }, [topic]));
+            });
+            container.appendChild(topicsSection);
+        }
+
+        // Key Highlights
+        if (summary.keyHighlights && summary.keyHighlights.length > 0) {
+            const highlightsSection = createElement('div', { className: 'chat-highlights' });
+            highlightsSection.appendChild(createElement('strong', {}, ['Key Highlights']));
+            const highlightList = createElement('ul', {});
+            summary.keyHighlights.forEach(h => {
+                highlightList.appendChild(createElement('li', {}, [h]));
+            });
+            highlightsSection.appendChild(highlightList);
+            container.appendChild(highlightsSection);
+        }
+
+        // Action Items
+        if (summary.actionItems && summary.actionItems.length > 0) {
+            const actionsSection = createElement('div', { className: 'chat-actions' });
+            actionsSection.appendChild(createElement('strong', {}, ['Action Items']));
+            const actionList = createElement('ul', {});
+            summary.actionItems.forEach(a => {
+                actionList.appendChild(createElement('li', {}, [a]));
+            });
+            actionsSection.appendChild(actionList);
+            container.appendChild(actionsSection);
+        }
+
+        // Participants
+        if (summary.participants && summary.participants.length > 0) {
+            const participantsSection = createElement('div', { className: 'chat-participants' });
+            participantsSection.appendChild(createElement('strong', {}, ['Participants: ']));
+            participantsSection.appendChild(document.createTextNode(summary.participants.join(', ')));
+            container.appendChild(participantsSection);
+        }
+
     } catch (error) {
-        console.error('Error loading chat activity:', error);
+        console.error('Error loading chat summary:', error);
         container.textContent = '';
 
         const errorDiv = createElement('div', { className: 'chat-error' });
-        errorDiv.appendChild(createElement('p', {}, ['Unable to load chat activity']));
+        errorDiv.appendChild(createElement('p', {}, ['Unable to load chat summary']));
         errorDiv.appendChild(createElement('p', { className: 'chat-error-hint' },
-            ['The MCP server may not be accessible from the browser']));
+            [error.message || 'Please try again later']));
         container.appendChild(errorDiv);
     }
+}
+
+// Legacy function for compatibility
+async function loadChatActivity(spaceUrl) {
+    // This now uses the engagement ID based approach via loadChatSummary
+    // Called from viewEngagement which already has the engagement context
+    console.log('loadChatActivity called - use loadChatSummary instead');
 }
 
 // Close modals on outside click
