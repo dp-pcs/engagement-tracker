@@ -255,6 +255,7 @@ function showEngagementModal(engagement = null) {
         document.getElementById('engagement-objectives').value = engagement.objectives || '';
         document.getElementById('engagement-tools').value = (engagement.tools || []).join(', ');
         document.getElementById('engagement-agents').value = (engagement.agents || []).join(', ');
+        document.getElementById('engagement-start-date').value = engagement.startDate || '';
         document.getElementById('engagement-target-date').value = engagement.targetDate || '';
         document.getElementById('engagement-blockers').value = engagement.blockers || '';
         document.getElementById('engagement-next-steps').value = engagement.nextSteps || '';
@@ -283,6 +284,7 @@ async function saveEngagement(event) {
         objectives: document.getElementById('engagement-objectives').value,
         tools: document.getElementById('engagement-tools').value.split(',').map(s => s.trim()).filter(Boolean),
         agents: document.getElementById('engagement-agents').value.split(',').map(s => s.trim()).filter(Boolean),
+        startDate: document.getElementById('engagement-start-date').value,
         targetDate: document.getElementById('engagement-target-date').value,
         blockers: document.getElementById('engagement-blockers').value,
         nextSteps: document.getElementById('engagement-next-steps').value
