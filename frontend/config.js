@@ -10,7 +10,7 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
 // Create at: https://console.cloud.google.com/apis/credentials
 // Authorized JavaScript origins: https://pulse.elelem.expert
 // Authorized redirect URIs: https://pulse.elelem.expert
-const GOOGLE_CLIENT_ID = '';  // Set this after creating OAuth credentials
+const GOOGLE_CLIENT_ID = '608961564414-un375udmq72c4qk7fapqfcifchc0p6gl.apps.googleusercontent.com';
 
 // Allowed email domains (empty = allow all Google accounts)
 const ALLOWED_DOMAINS = ['trilogy.com', 'devfactory.com', 'crossover.com'];
