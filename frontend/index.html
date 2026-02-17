@@ -5,9 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pulse - Engagement Tracker</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <div class="app">
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-container">
+            <div class="login-logo">
+                <span class="logo-icon">◉</span>
+                <span class="logo-text">Pulse</span>
+            </div>
+            <p class="login-subtitle">Engagement Tracker</p>
+            <div id="g_id_onload"
+                data-client_id=""
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleGoogleSignIn"
+                data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left">
+            </div>
+            <p class="login-note">Sign in with your Google account to continue</p>
+        </div>
+    </div>
+
+    <!-- Main App (hidden until authenticated) -->
+    <div class="app" id="main-app" style="display: none;">
         <nav class="sidebar">
             <div class="logo">
                 <span class="logo-icon">◉</span>
@@ -24,6 +53,11 @@
             </ul>
             <div class="nav-footer">
                 <a href="feedback.html" target="_blank">Public Feedback Form</a>
+                <div class="user-menu" id="user-menu">
+                    <img id="user-avatar" class="user-avatar" src="" alt="">
+                    <span id="user-name" class="user-name"></span>
+                    <button class="btn btn-small btn-secondary" onclick="handleSignOut()">Sign Out</button>
+                </div>
             </div>
         </nav>
 

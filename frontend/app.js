@@ -6,12 +6,95 @@ let agents = [];
 let tasks = [];
 let currentFilter = 'all';
 let currentTaskFilter = 'all';
+let currentUser = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    initAuth();
+});
+
+// Authentication
+function initAuth() {
+    // Check for existing session
+    const savedUser = localStorage.getItem('pulse_user');
+    if (savedUser) {
+        try {
+            currentUser = JSON.parse(savedUser);
+            showApp();
+        } catch (e) {
+            localStorage.removeItem('pulse_user');
+            showLogin();
+        }
+    } else {
+        showLogin();
+    }
+
+    // Initialize Google Sign-In button with client ID
+    if (GOOGLE_CLIENT_ID) {
+        const gIdOnload = document.getElementById('g_id_onload');
+        if (gIdOnload) {
+            gIdOnload.setAttribute('data-client_id', GOOGLE_CLIENT_ID);
+        }
+    }
+}
+
+function handleGoogleSignIn(response) {
+    // Decode the JWT credential
+    const credential = response.credential;
+    const payload = JSON.parse(atob(credential.split('.')[1]));
+
+    // Check allowed domains if configured
+    if (typeof ALLOWED_DOMAINS !== 'undefined' && ALLOWED_DOMAINS.length > 0) {
+        const emailDomain = payload.email.split('@')[1];
+        if (!ALLOWED_DOMAINS.includes(emailDomain)) {
+            alert(`Access denied. Only users from ${ALLOWED_DOMAINS.join(', ')} domains are allowed.`);
+            return;
+        }
+    }
+
+    currentUser = {
+        email: payload.email,
+        name: payload.name,
+        picture: payload.picture,
+        token: credential
+    };
+
+    // Save to localStorage
+    localStorage.setItem('pulse_user', JSON.stringify(currentUser));
+
+    showApp();
+}
+
+function handleSignOut() {
+    currentUser = null;
+    localStorage.removeItem('pulse_user');
+    showLogin();
+
+    // Revoke Google session
+    if (typeof google !== 'undefined' && google.accounts) {
+        google.accounts.id.disableAutoSelect();
+    }
+}
+
+function showLogin() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('main-app').style.display = 'none';
+}
+
+function showApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
+
+    // Update user info in sidebar
+    if (currentUser) {
+        document.getElementById('user-avatar').src = currentUser.picture || '';
+        document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
+    }
+
+    // Initialize the app
     setupNavigation();
     loadDashboard();
-});
+}
 
 // Navigation
 function setupNavigation() {
