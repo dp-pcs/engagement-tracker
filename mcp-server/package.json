@@ -1,0 +1,17 @@
+{
+  "name": "pulse-engagement-tracker-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Pulse Engagement Tracker - track engagements and collect testimonials via Braintrust",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "keywords": ["mcp", "braintrust", "engagement", "testimonials"],
+  "author": "AI CoE",
+  "license": "MIT"
+}

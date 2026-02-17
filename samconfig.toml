@@ -1,0 +1,20 @@
+# SAM deployment configuration
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "pulse-engagement-tracker"
+resolve_s3 = true
+s3_prefix = "pulse-engagement-tracker"
+region = "us-east-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=dev"
+
+[prod.deploy.parameters]
+stack_name = "pulse-engagement-tracker-prod"
+resolve_s3 = true
+s3_prefix = "pulse-engagement-tracker"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=prod"

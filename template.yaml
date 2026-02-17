@@ -1,0 +1,261 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Engagement Tracker - Track engagements and collect testimonials
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.11
+    MemorySize: 256
+    Environment:
+      Variables:
+        ENGAGEMENTS_TABLE: !Ref EngagementsTable
+        TESTIMONIALS_TABLE: !Ref TestimonialsTable
+        SOLICITATIONS_TABLE: !Ref SolicitationsTable
+        CORS_ORIGIN: !If [IsProd, !Sub 'https://${WebsiteBucket}.s3.amazonaws.com', '*']
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+
+Conditions:
+  IsProd: !Equals [!Ref Environment, prod]
+
+Resources:
+  # DynamoDB Tables
+  EngagementsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'engagement-tracker-engagements-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  TestimonialsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'engagement-tracker-testimonials-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: engagementId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: engagement-index
+          KeySchema:
+            - AttributeName: engagementId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  SolicitationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'engagement-tracker-solicitations-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: token
+          AttributeType: S
+        - AttributeName: engagementId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: token
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: engagement-index
+          KeySchema:
+            - AttributeName: engagementId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  # Lambda Functions
+  EngagementsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'engagement-tracker-engagements-${Environment}'
+      CodeUri: functions/
+      Handler: engagements.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EngagementsTable
+      Events:
+        GetAll:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /engagements
+            Method: GET
+        GetOne:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /engagements/{id}
+            Method: GET
+        Create:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /engagements
+            Method: POST
+        Update:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /engagements/{id}
+            Method: PUT
+        Delete:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /engagements/{id}
+            Method: DELETE
+
+  TestimonialsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'engagement-tracker-testimonials-${Environment}'
+      CodeUri: functions/
+      Handler: testimonials.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TestimonialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref EngagementsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SolicitationsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SolicitationsTable
+      Events:
+        GetAll:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /testimonials
+            Method: GET
+        GetOne:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /testimonials/{id}
+            Method: GET
+        Create:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /testimonials
+            Method: POST
+        CreatePublic:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /public/testimonials
+            Method: POST
+        Update:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /testimonials/{id}
+            Method: PUT
+
+  SolicitationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'engagement-tracker-solicitations-${Environment}'
+      CodeUri: functions/
+      Handler: solicitations.handler
+      Environment:
+        Variables:
+          FRONTEND_URL: !If [IsProd, !Sub 'https://${WebsiteBucket}.s3.amazonaws.com', 'http://localhost:8080']
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SolicitationsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref EngagementsTable
+      Events:
+        GetAll:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /solicitations
+            Method: GET
+        GetByToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /solicitations/{token}
+            Method: GET
+        Create:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /solicitations
+            Method: POST
+
+  # S3 Bucket for Frontend
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'engagement-tracker-frontend-${Environment}-${AWS::AccountId}'
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub '${WebsiteBucket.Arn}/*'
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+  WebsiteUrl:
+    Description: S3 Website URL
+    Value: !GetAtt WebsiteBucket.WebsiteURL
+  WebsiteBucket:
+    Description: S3 Bucket for frontend
+    Value: !Ref WebsiteBucket

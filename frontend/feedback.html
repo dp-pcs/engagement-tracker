@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Feedback - Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="feedback-page">
+    <div class="feedback-container">
+        <header class="feedback-header">
+            <div class="logo">
+                <span class="logo-icon">◉</span>
+                <span class="logo-text">Pulse</span>
+            </div>
+            <p class="tagline">Engagement Feedback</p>
+        </header>
+
+        <main class="feedback-main">
+            <!-- Loading State -->
+            <div id="loading-state" class="feedback-state">
+                <div class="spinner"></div>
+                <p>Loading...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="feedback-state hidden">
+                <div class="error-icon">!</div>
+                <h2>Unable to Load</h2>
+                <p id="error-message">Something went wrong.</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="success-state" class="feedback-state hidden">
+                <div class="success-icon">✓</div>
+                <h2>Thank You!</h2>
+                <p>Your feedback has been submitted successfully.</p>
+                <p class="success-note">Your input helps us improve our AI-powered solutions.</p>
+            </div>
+
+            <!-- Feedback Form -->
+            <div id="feedback-form-container" class="hidden">
+                <div id="solicitation-context" class="context-card hidden">
+                    <h3>Feedback Request</h3>
+                    <p class="context-engagement">For: <strong id="context-engagement-name"></strong></p>
+                    <p id="context-message" class="context-message hidden"></p>
+                </div>
+
+                <form id="feedback-form" onsubmit="submitFeedback(event)">
+                    <input type="hidden" id="solicitation-token">
+                    <input type="hidden" id="feedback-engagement-id">
+
+                    <!-- For ad-hoc submissions -->
+                    <div id="engagement-selector" class="form-group">
+                        <label for="select-engagement">Which engagement are you providing feedback for?</label>
+                        <select id="select-engagement">
+                            <option value="">Select an engagement (or leave blank for general feedback)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>About You</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="submitter-name">Your Name *</label>
+                                <input type="text" id="submitter-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="submitter-email">Your Email</label>
+                                <input type="email" id="submitter-email">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="submitter-role">Your Role</label>
+                                <input type="text" id="submitter-role">
+                            </div>
+                            <div class="form-group">
+                                <label for="submitter-team">Your Team</label>
+                                <input type="text" id="submitter-team">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Your Feedback</h3>
+
+                        <div class="form-group">
+                            <label>Overall Rating *</label>
+                            <div class="rating-selector">
+                                <button type="button" class="rating-btn" data-rating="1">1</button>
+                                <button type="button" class="rating-btn" data-rating="2">2</button>
+                                <button type="button" class="rating-btn" data-rating="3">3</button>
+                                <button type="button" class="rating-btn" data-rating="4">4</button>
+                                <button type="button" class="rating-btn" data-rating="5">5</button>
+                            </div>
+                            <div class="rating-labels">
+                                <span>Not Satisfied</span>
+                                <span>Very Satisfied</span>
+                            </div>
+                            <input type="hidden" id="rating-value" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="testimonial-text">Your Experience *</label>
+                            <textarea id="testimonial-text" rows="4" required
+                                placeholder="Tell us about your experience working with our AI solutions..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="what-worked">What worked well?</label>
+                            <textarea id="what-worked" rows="3"
+                                placeholder="What aspects exceeded your expectations?"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="what-improve">What could be improved?</label>
+                            <textarea id="what-improve" rows="3"
+                                placeholder="What would you like to see improved?"></textarea>
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="would-recommend" checked>
+                                <span>I would recommend this solution to colleagues</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">Submit Feedback</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer class="feedback-footer">
+            <p>Powered by <strong>Braintrust</strong> | AI Center of Excellence</p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        let selectedRating = 0;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (token) {
+                // Solicited feedback - load solicitation details
+                await loadSolicitation(token);
+            } else {
+                // Ad-hoc feedback - load engagement list
+                await loadEngagements();
+                showForm();
+            }
+
+            // Set up rating buttons
+            document.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedRating = parseInt(btn.dataset.rating);
+                    document.getElementById('rating-value').value = selectedRating;
+                    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                });
+            });
+        });
+
+        async function loadSolicitation(token) {
+            try {
+                const response = await fetch(`${API_URL}/solicitations/${token}`);
+
+                if (response.status === 410) {
+                    showError('This feedback request has expired or already been completed.');
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Failed to load feedback request');
+                }
+
+                const solicitation = await response.json();
+
+                // Populate form with solicitation data
+                document.getElementById('solicitation-token').value = token;
+                document.getElementById('feedback-engagement-id').value = solicitation.engagementId;
+                document.getElementById('context-engagement-name').textContent = solicitation.engagementName;
+
+                if (solicitation.message) {
+                    document.getElementById('context-message').textContent = solicitation.message;
+                    document.getElementById('context-message').classList.remove('hidden');
+                }
+
+                if (solicitation.recipientName) {
+                    document.getElementById('submitter-name').value = solicitation.recipientName;
+                }
+                if (solicitation.recipientEmail) {
+                    document.getElementById('submitter-email').value = solicitation.recipientEmail;
+                }
+                if (solicitation.recipientRole) {
+                    document.getElementById('submitter-role').value = solicitation.recipientRole;
+                }
+
+                // Hide engagement selector for solicited feedback
+                document.getElementById('engagement-selector').classList.add('hidden');
+                document.getElementById('solicitation-context').classList.remove('hidden');
+
+                showForm();
+            } catch (error) {
+                console.error('Error loading solicitation:', error);
+                showError('Unable to load feedback request. Please try again later.');
+            }
+        }
+
+        async function loadEngagements() {
+            try {
+                const response = await fetch(`${API_URL}/engagements`);
+                const data = await response.json();
+
+                const select = document.getElementById('select-engagement');
+                data.engagements
+                    .filter(e => !e.status.startsWith('closed'))
+                    .forEach(engagement => {
+                        const option = document.createElement('option');
+                        option.value = engagement.id;
+                        option.textContent = `${engagement.name} (${engagement.team || 'No team'})`;
+                        select.appendChild(option);
+                    });
+            } catch (error) {
+                console.error('Error loading engagements:', error);
+            }
+        }
+
+        async function submitFeedback(event) {
+            event.preventDefault();
+
+            if (!selectedRating) {
+                alert('Please select a rating');
+                return;
+            }
+
+            const token = document.getElementById('solicitation-token').value;
+            const engagementId = document.getElementById('feedback-engagement-id').value ||
+                                 document.getElementById('select-engagement').value;
+
+            const data = {
+                engagementId: engagementId,
+                solicitationToken: token || undefined,
+                submitterName: document.getElementById('submitter-name').value,
+                submitterEmail: document.getElementById('submitter-email').value,
+                submitterRole: document.getElementById('submitter-role').value,
+                submitterTeam: document.getElementById('submitter-team').value,
+                rating: selectedRating,
+                testimonialText: document.getElementById('testimonial-text').value,
+                whatWorkedWell: document.getElementById('what-worked').value,
+                whatCouldImprove: document.getElementById('what-improve').value,
+                wouldRecommend: document.getElementById('would-recommend').checked
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/public/testimonials`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to submit feedback');
+                }
+
+                showSuccess();
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('Failed to submit feedback: ' + error.message);
+            }
+        }
+
+        function showForm() {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('feedback-form-container').classList.remove('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-state').classList.remove('hidden');
+        }
+
+        function showSuccess() {
+            document.getElementById('feedback-form-container').classList.add('hidden');
+            document.getElementById('success-state').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
