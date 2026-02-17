@@ -3,7 +3,7 @@ version = 0.1
 
 [default.deploy.parameters]
 stack_name = "pulse-engagement-tracker"
-resolve_s3 = true
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-l56ap6crdyy9"
 s3_prefix = "pulse-engagement-tracker"
 region = "us-east-1"
 confirm_changeset = false
@@ -12,7 +12,7 @@ parameter_overrides = "Environment=dev"
 
 [prod.deploy.parameters]
 stack_name = "pulse-engagement-tracker-prod"
-resolve_s3 = true
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-l56ap6crdyy9"
 s3_prefix = "pulse-engagement-tracker"
 region = "us-east-1"
 confirm_changeset = true

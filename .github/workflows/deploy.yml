@@ -42,16 +42,7 @@ jobs:
 
       - name: Deploy SAM stack
         run: |
-          sam deploy \
-            --stack-name pulse-engagement-tracker \
-            --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-l56ap6crdyy9 \
-            --s3-prefix pulse-engagement-tracker \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset \
-            --resolve-s3 false \
-            --capabilities CAPABILITY_IAM \
-            --parameter-overrides Environment=dev \
-            --region us-east-1
+          sam deploy --no-fail-on-empty-changeset
 
       - name: Get stack outputs
         id: get-outputs
