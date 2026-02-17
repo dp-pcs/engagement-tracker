@@ -91,6 +91,7 @@ def create_engagement(data):
         'tools': data.get('tools', []),  # MCP servers involved
         'agents': data.get('agents', []),  # Braintrust agents deployed
         'objectives': data.get('objectives', ''),
+        'chatSpace': data.get('chatSpace', ''),
         'successMetrics': data.get('successMetrics', ''),
         'blockers': data.get('blockers', ''),
         'nextSteps': data.get('nextSteps', ''),
@@ -125,7 +126,7 @@ def update_engagement(engagement_id, data):
     expression_names = {}
 
     allowed_fields = ['name', 'team', 'description', 'status', 'owner', 'stakeholders',
-                      'tools', 'agents', 'objectives', 'successMetrics', 'blockers',
+                      'tools', 'agents', 'objectives', 'chatSpace', 'successMetrics', 'blockers',
                       'nextSteps', 'notes', 'startDate', 'targetDate', 'completedDate']
 
     for field in allowed_fields:

@@ -275,6 +275,7 @@ async function showEngagementModal(engagement = null) {
         document.getElementById('engagement-description').value = engagement.description || '';
         document.getElementById('engagement-status').value = engagement.status || 'discovery';
         document.getElementById('engagement-objectives').value = engagement.objectives || '';
+        document.getElementById('engagement-chat-space').value = engagement.chatSpace || '';
         document.getElementById('engagement-tools').value = (engagement.tools || []).join(', ');
         document.getElementById('engagement-start-date').value = engagement.startDate || '';
         document.getElementById('engagement-target-date').value = engagement.targetDate || '';
@@ -328,6 +329,7 @@ async function saveEngagement(event) {
         description: document.getElementById('engagement-description').value,
         status: document.getElementById('engagement-status').value,
         objectives: document.getElementById('engagement-objectives').value,
+        chatSpace: document.getElementById('engagement-chat-space').value,
         tools: document.getElementById('engagement-tools').value.split(',').map(s => s.trim()).filter(Boolean),
         agents: Array.from(document.getElementById('engagement-agents').selectedOptions).map(o => o.value),
         startDate: document.getElementById('engagement-start-date').value,
