@@ -878,3 +878,284 @@ form {
         grid-template-columns: 1fr;
     }
 }
+
+/* Status Report Styles */
+.report-date {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.report-section {
+    margin-bottom: 40px;
+}
+
+.report-section h2 {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Summary Grid */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+}
+
+.summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    text-align: center;
+    border-left: 4px solid var(--border-color);
+}
+
+.summary-card.summary-active { border-left-color: var(--success); }
+.summary-card.summary-discovery { border-left-color: var(--accent-primary); }
+.summary-card.summary-paused { border-left-color: var(--warning); }
+.summary-card.summary-complete { border-left-color: #22c55e; }
+.summary-card.summary-feedback { border-left-color: var(--accent-secondary); }
+.summary-card.summary-pending { border-left-color: #f59e0b; }
+
+.summary-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.summary-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Report Table */
+.report-table-container {
+    overflow-x: auto;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.report-table th,
+.report-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.report-table th {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.report-table td {
+    color: var(--text-primary);
+    font-size: 14px;
+    vertical-align: top;
+}
+
+.report-table tr:hover {
+    background: var(--bg-tertiary);
+}
+
+.report-table .engagement-name-cell {
+    font-weight: 600;
+}
+
+.report-table .objectives-cell {
+    max-width: 250px;
+    color: var(--text-secondary);
+}
+
+.report-table .blockers-cell {
+    max-width: 200px;
+}
+
+.report-table .blockers-cell.has-blocker {
+    color: var(--error);
+}
+
+.report-table .feedback-cell {
+    text-align: center;
+}
+
+.feedback-counts {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.feedback-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.feedback-count.testimonials {
+    color: var(--success);
+}
+
+.feedback-count.pending {
+    color: var(--warning);
+}
+
+/* Blockers List */
+.blockers-list {
+    display: grid;
+    gap: 12px;
+}
+
+.blocker-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--error);
+    border-radius: var(--border-radius-sm);
+    padding: 16px;
+}
+
+.blocker-item .engagement-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.blocker-item .blocker-text {
+    color: var(--text-secondary);
+}
+
+.no-blockers {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--success);
+    border-radius: var(--border-radius-sm);
+    padding: 16px;
+    color: var(--success);
+}
+
+/* Feedback List */
+.feedback-list {
+    display: grid;
+    gap: 12px;
+}
+
+.feedback-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 16px;
+}
+
+.feedback-item .feedback-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.feedback-item .feedback-author {
+    font-weight: 600;
+}
+
+.feedback-item .feedback-engagement {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.feedback-item .feedback-text {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Solicitations List in Report */
+.solicitations-list {
+    display: grid;
+    gap: 12px;
+}
+
+.solicitation-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.solicitation-item .solicitation-info {
+    flex: 1;
+}
+
+.solicitation-item .recipient-name {
+    font-weight: 600;
+}
+
+.solicitation-item .solicitation-meta {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.no-items {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 16px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* Print Styles */
+@media print {
+    .sidebar {
+        display: none;
+    }
+    
+    .content {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    .btn {
+        display: none;
+    }
+    
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .report-table th,
+    .report-table td {
+        border: 1px solid #ddd;
+    }
+    
+    .summary-card,
+    .blocker-item,
+    .feedback-item,
+    .solicitation-item {
+        border: 1px solid #ddd;
+        background: white;
+    }
+    
+    .status-badge {
+        border: 1px solid currentColor;
+    }
+}

@@ -15,6 +15,7 @@
             </div>
             <ul class="nav-links">
                 <li><a href="#" data-view="dashboard" class="active">Dashboard</a></li>
+                <li><a href="#" data-view="status-report">Status Report</a></li>
                 <li><a href="#" data-view="engagements">Engagements</a></li>
                 <li><a href="#" data-view="testimonials">Testimonials</a></li>
                 <li><a href="#" data-view="solicitations">Solicitations</a></li>
@@ -57,6 +58,88 @@
                 <section class="section">
                     <h2>Recent Testimonials</h2>
                     <div id="recent-testimonials" class="card-list"></div>
+                </section>
+            </div>
+
+            <!-- Status Report View -->
+            <div id="status-report-view" class="view">
+                <header class="view-header">
+                    <h1>Engagement Status Report</h1>
+                    <div class="header-actions">
+                        <span id="report-date" class="report-date"></span>
+                        <button class="btn btn-secondary" onclick="window.print()">Print Report</button>
+                    </div>
+                </header>
+
+                <!-- Executive Summary -->
+                <section class="report-section">
+                    <h2>Executive Summary</h2>
+                    <div class="summary-grid">
+                        <div class="summary-card summary-active">
+                            <div class="summary-number" id="summary-active">0</div>
+                            <div class="summary-label">Active</div>
+                        </div>
+                        <div class="summary-card summary-discovery">
+                            <div class="summary-number" id="summary-discovery">0</div>
+                            <div class="summary-label">Discovery</div>
+                        </div>
+                        <div class="summary-card summary-paused">
+                            <div class="summary-number" id="summary-paused">0</div>
+                            <div class="summary-label">Paused</div>
+                        </div>
+                        <div class="summary-card summary-complete">
+                            <div class="summary-number" id="summary-complete">0</div>
+                            <div class="summary-label">Completed</div>
+                        </div>
+                        <div class="summary-card summary-feedback">
+                            <div class="summary-number" id="summary-feedback">0</div>
+                            <div class="summary-label">Feedback Received</div>
+                        </div>
+                        <div class="summary-card summary-pending">
+                            <div class="summary-number" id="summary-pending-requests">0</div>
+                            <div class="summary-label">Pending Requests</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Active Engagements Table -->
+                <section class="report-section">
+                    <h2>Current Engagements</h2>
+                    <div class="report-table-container">
+                        <table class="report-table" id="engagements-report-table">
+                            <thead>
+                                <tr>
+                                    <th>Engagement</th>
+                                    <th>Team</th>
+                                    <th>Status</th>
+                                    <th>Request/Objectives</th>
+                                    <th>Blockers</th>
+                                    <th>Target Date</th>
+                                    <th>Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody id="engagements-report-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Blockers Section -->
+                <section class="report-section" id="blockers-section">
+                    <h2>Current Blockers</h2>
+                    <div id="blockers-list" class="blockers-list"></div>
+                </section>
+
+                <!-- Recent Feedback -->
+                <section class="report-section">
+                    <h2>Recent Feedback</h2>
+                    <div id="recent-feedback-list" class="feedback-list"></div>
+                </section>
+
+                <!-- Pending Solicitations -->
+                <section class="report-section">
+                    <h2>Pending Feedback Requests</h2>
+                    <div id="pending-solicitations-list" class="solicitations-list"></div>
                 </section>
             </div>
 
@@ -146,6 +229,10 @@
                     <input type="text" id="engagement-agents" placeholder="e.g., Sales Assistant, Contract Bot">
                 </div>
                 <div class="form-group">
+                    <label for="engagement-target-date">Target Completion Date</label>
+                    <input type="date" id="engagement-target-date">
+                </div>
+                <div class="form-group">
                     <label for="engagement-blockers">Blockers</label>
                     <textarea id="engagement-blockers" rows="2"></textarea>
                 </div>
@@ -226,5 +313,6 @@
 
     <script src="config.js"></script>
     <script src="app.js"></script>
+    <script src="status-report.js"></script>
 </body>
 </html>
